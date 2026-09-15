@@ -1,29 +1,32 @@
 
-{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --full` first. Manual edits must follow format and schema conventions, then run `calcit edit format`.") (:package |app)
-  :entries $ {}
-    :default $ {} (:description |) (:init-fn 'app.main/main!) (:mode :native) (:reload-fn 'app.main/reload!)
+{}
+  :about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --contract` before mutations; use `--full` for first orientation or changed contract digest. Manual edits must follow format and schema conventions, then run `calcit edit format`."
+  :package |app
+  :entries $ {} $ :default
+    {} (:description |) (:init-fn 'app.main/main!) (:mode :native) (:reload-fn 'app.main/reload!)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/
       :type-slots $ {}
   :files $ {}
     'app.comp.container $ %{} 'FileEntry
-      :defs $ {}
-        'comp-container $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-container (reel)
-              let
-                  reel-map $ unsafe-coerce reel 'Map
-                  store $ unsafe-coerce (&map:get reel-map :store) 'Map
-                  states $ unsafe-coerce (&map:get store :states) 'Map
-                div
-                  {} $ :style (merge ui/global ui/row)
-                  <> |TODO
-                  when dev? $ comp-reel (>> states :reel) reel ({})
+      :defs $ {} $ 'comp-container
+        %{} 'CodeEntry (:doc |)
+          :code $ quote $ defcomp comp-container (reel)
+            let
+                reel-map $ unsafe-coerce reel 'Map
+                store $ unsafe-coerce (&map:get reel-map :store) 'Map
+                states $ unsafe-coerce (&map:get store :states) 'Map
+              div
+                {} $ :style $ merge ui/global ui/row
+                <> |TODO
+                when dev? $ comp-reel (>> states :reel) reel $ {}
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
+            :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.container $ :require (respo-ui.core :as ui)
+        :code $ quote $ ns app.comp.container
+          :require (respo-ui.core :as ui)
             respo.core :refer $ defcomp defeffect <> >> div button textarea span input
             respo.comp.space :refer $ =<
             reel.comp.reel :refer $ comp-reel
@@ -32,81 +35,85 @@
     'app.config $ %{} 'FileEntry
       :defs $ {}
         'dev? $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def dev? $ = |dev
-              option:unwrap-or (get-env |mode) |release
+          :code $ quote $ def dev?
+            = |dev $ option:unwrap-or (get-env |mode) |release
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Bool
         'site $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def site $ {} (:storage-key |workflow)
+          :code $ quote $ def site
+            {} $ :storage-key |workflow
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Map 'Tag 'String
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote (ns app.config)
+        :code $ quote $ ns app.config
     'app.main $ %{} 'FileEntry
       :defs $ {}
         '*reel $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defatom *reel $ -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
+          :code $ quote $ defatom *reel
+            -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
         'dispatch! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn dispatch! (op op-data)
-              when
-                and config/dev? $ not= op :states
-                println |Dispatch: op
-              reset! *reel $ reel-updater updater @*reel (:: op op-data)
+          :code $ quote $ defn dispatch! (op)
+            when config/dev? $ println |Dispatch: op
+            reset! *reel $ reel-updater updater @*reel op
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'Enum
         'main! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn main! ()
-              println "|Running mode:" $ if config/dev? |dev |release
-              if config/dev? $ load-console-formatter!
-              render-app!
-              add-watch *reel :changes $ fn (reel prev) (render-app!)
-              listen-devtools! |k dispatch!
-              .!addEventListener (unsafe-coerce js/window 'JsObject) |beforeunload $ fn (event) (persist-storage!)
-              flipped js/setInterval 60000 persist-storage!
-              let
-                  raw $ .!getItem (unsafe-coerce js/localStorage 'JsObject) (:storage-key config/site)
-                when (js-present? raw)
-                  dispatch! :hydrate-storage $ parse-cirru-edn (unsafe-coerce raw 'String)
-              println "|App started."
+          :code $ quote $ defn main! ()
+            println "|Running mode:" $ if config/dev? |dev |release
+            if config/dev? $ load-console-formatter!
+            render-app!
+            add-watch *reel :changes $ fn (_reel _prev) (render-app!)
+            listen-devtools! |k dispatch!
+            add-event-listener! |beforeunload $ fn (_event) (persist-storage!)
+            set-interval! persist-storage! 60000
+            match
+              storage-get $ option:unwrap-or (get config/site :storage-key) |workflow
+              (:some raw)
+                dispatch! $ :: :hydrate-storage $ parse-cirru-edn raw
+              (:none) &unit
+            println "|App started."
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+            :features $ #{} :js-ffi
         'mount-target $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def mount-target $ .!querySelector (unsafe-coerce js/document 'JsObject) |.app
+          :code $ quote $ defn mount-target ()
+            option:unwrap $ query-selector |.app
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'js-ffi.browser/DomElementHost)
+            :args $ []
         'persist-storage! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn persist-storage! () (js/console.log |persist)
-              .!setItem (unsafe-coerce js/localStorage 'JsObject) (:storage-key config/site)
-                format-cirru-edn $ &map:get (unsafe-coerce @*reel 'Map) :store
+          :code $ quote $ defn persist-storage! () (js/console.log |persist)
+            storage-set!
+              option:unwrap-or (get config/site :storage-key) |workflow
+              format-cirru-edn $ &map:get @*reel :store
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+            :features $ #{} :js-ffi
         'reload! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn reload! () $ if (nil? build-errors)
+          :code $ quote $ defn reload! ()
+            if (nil? build-errors)
               do (remove-watch *reel :changes) (clear-cache!)
                 add-watch *reel :changes $ fn (reel prev) (render-app!)
-                reset! *reel $ refresh-reel @*reel schema/store updater
+                reset! *reel $ assert-type (refresh-reel @*reel schema/store updater) (:: 'Map 'Tag 'Dynamic)
                 hud! |ok~ |Ok
               hud! |error build-errors
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
         'render-app! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn render-app! () $ render! mount-target (comp-container @*reel) dispatch!
+          :code $ quote $ defn render-app! ()
+            render! (mount-target) (comp-container @*reel) dispatch!
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.main $ :require
+        :code $ quote $ ns app.main
+          :require
             respo.core :refer $ render! clear-cache!
             app.comp.container :refer $ comp-container
             app.updater :refer $ updater
@@ -117,29 +124,32 @@
             app.config :as config
             |./calcit.build-errors :default build-errors
             |bottom-tip :default hud!
+            js-ffi.browser :refer $ query-selector storage-get storage-set! add-event-listener! set-interval!
     'app.schema $ %{} 'FileEntry
       :defs $ {}
+        'Store $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ def Store &unit
+          :examples $ []
+          :schema $ :: 'Map 'Tag 'Dynamic
         'store $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def store $ {}
-              :states $ {}
-                :cursor $ []
+          :code $ quote $ def store
+            {} $ :states $ {}
+              :cursor $ []
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'app.schema/Store
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote (ns app.schema)
+        :code $ quote $ ns app.schema
     'app.updater $ %{} 'FileEntry
-      :defs $ {}
-        'updater $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn updater (store op op-id op-time)
-              match op
-                (:states cursor data) (update-states store cursor data)
-                (:hydrate-storage data) data
-                _ $ do (println "|unknown op:" op) store
+      :defs $ {} $ 'updater
+        %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn updater (store op op-id op-time)
+            match op
+              (:states cursor data) (update-states store cursor data)
+              (:hydrate-storage data) data
+              _ $ do (println "|unknown op:" op) store
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'app.schema/Store)
+            :args $ [] 'app.schema/Store 'Enum 'String 'Number
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.updater $ :require
-            respo.cursor :refer $ update-states
+        :code $ quote $ ns app.updater
+          :require $ respo.cursor :refer $ update-states
