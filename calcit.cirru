@@ -5,7 +5,7 @@
   :entries $ {} $ :default
     {} (:description |) (:init-fn 'app.main/main!) (:mode :js) (:reload-fn 'app.main/reload!) (:target :browser)
       :feature-policy $ {}
-      :modules $ [] |respo.calcit/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/
+      :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
       :type-slots $ {}
   :files $ {}
     'app.comp.container $ %{} 'FileEntry
@@ -13,9 +13,9 @@
         %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-container (reel)
             let
-                reel-map $ unsafe-coerce reel 'Map
-                store $ unsafe-coerce (&map:get reel-map :store) 'Map
-                states $ unsafe-coerce (&map:get store :states) 'Map
+                reel-map reel
+                store $ assert-type (&map:get reel-map :store) 'app.schema/Store
+                states $ assert-type (&map:get store :states) (:: 'Map 'Tag 'Dynamic)
               div
                 {} $ :style $ merge ui/global ui/row
                 <> |TODO
@@ -30,7 +30,6 @@
             respo.core :refer $ defcomp defeffect <> >> div button textarea span input
             respo.comp.space :refer $ =<
             reel.comp.reel :refer $ comp-reel
-            respo-md.comp.md :refer $ comp-md
             app.config :refer $ dev?
     'app.config $ %{} 'FileEntry
       :defs $ {}
@@ -122,7 +121,7 @@
             reel.core :refer $ reel-updater refresh-reel
             reel.schema :as reel-schema
             app.config :as config
-            |./calcit.build-errors :default build-errors
+            |./calcit.build-errors.mjs :default build-errors
             |bottom-tip :default hud!
             js-ffi.browser :refer $ query-selector storage-get storage-set! add-event-listener! set-interval!
     'app.schema $ %{} 'FileEntry
