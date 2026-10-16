@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import * as c from "../js-out/calcit.core.mjs";
 import { store } from "../js-out/app.schema.mjs";
-import { updater } from "../js-out/app.updater.mjs";
+import { updater, update_wire_store } from "../js-out/app.updater.mjs";
 import { comp_container } from "../js-out/app.comp.container.mjs";
 import { make_string } from "../js-out/respo.render.html.mjs";
 import { reel } from "../js-out/reel.schema.mjs";
@@ -33,7 +33,7 @@ test("legacy storage maps round-trip and hydrate without losing states", () => {
 });
 test("published Reel adapter handles single-Enum state dispatch", () => {
   const initial = newReel(store);
-  const next = reel_updater(updater, initial, op(t.states, c._$L_(t.editor), "through reel"));
+  const next = reel_updater(update_wire_store, initial, op(t.states, c._$L_(t.editor), "through reel"));
   assert.equal(get(get(get(get(next, t.store), t.states), t.editor), t.data), "through reel");
   assert.match(make_string(comp_container(next)), /TODO/);
 });

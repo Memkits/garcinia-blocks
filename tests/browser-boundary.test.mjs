@@ -26,7 +26,15 @@ test("persistence uses the existing storage key without accessing user browser d
   const storageDescriptor = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
   const writes = [];
   try {
-    const storage = { setItem(key, value) { writes.push([key, value]); } };
+    const values = new Map();
+    const storage = {
+      get length() { return values.size; },
+      getItem(key) { return values.get(key) ?? null; },
+      setItem(key, value) { values.set(key, value); writes.push([key, value]); },
+      removeItem(key) { values.delete(key); },
+      clear() { values.clear(); },
+      key(index) { return [...values.keys()][index] ?? null; },
+    };
     Object.defineProperty(globalThis, "localStorage", { configurable: true, value: storage });
     globalThis.window = { localStorage: storage };
     main.persist_storage_$x_();
