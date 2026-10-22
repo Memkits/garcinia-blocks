@@ -75,13 +75,13 @@
             render-app!
             add-watch! *reel :changes $ fn (_reel _prev) (render-app!)
             listen-devtools! |k dispatch-wire!
-            add-event-listener! |beforeunload $ fn (_event) (persist-storage!)
-            set-interval! persist-storage! 60000
             match
               storage-get $ option:unwrap-or (get config/site :storage-key) |workflow
               (:some raw)
                 dispatch! $ :: :hydrate-storage $ parse-cirru-edn raw
               (:none) &unit
+            add-event-listener! |beforeunload $ fn (_event) (persist-storage!)
+            set-interval! persist-storage! 60000
             println "|App started."
             , &unit
           :examples $ []

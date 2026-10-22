@@ -52,22 +52,24 @@ product:
 
 https://github.com/calcit-lang/respo-calcit-workflow
 
-使用已发布配对 Calcit/procs **0.30.1-alpha.4**（预发布）、Caps 0.1.1、
-Node.js 24、Yarn 4.18.0；模块使用正式 Respo 0.16.122、UI 0.7.41、
-Reel 0.6.39 和 js-ffi 0.2.3。
+使用配对正式 Calcit/procs **0.30.1**、Caps 0.1.1、
+Node.js 24、Yarn 4.18.0；模块使用精确正式 Respo 0.16.124、UI 0.8.0、
+Reel 0.6.41 和 js-ffi 0.2.5，升级后重新安装模块。
 
 ```sh
 caps --ci --strict
 yarn install --immutable
 caps verify --toolchain
 calcit calcit.cirru --check-only --all-defs
-calcit calcit.cirru fix --workflow strict --verify
+calcit calcit.cirru fix --workflow strict --verify --format json | jq -e '.data.workflow.status == "passed" and .diagnostics == []'
 yarn build
 node --test tests/*.test.mjs
 ```
 
 只维护 `calcit.cirru` / `deps.cirru`。Store 仍为原 Map 格式，保留未知字段、
-`workflow` 存储键、启动恢复、关闭页面及每分钟持久化行为；状态树兼容混合 key。
+`workflow` 存储键与每分钟持久化周期；状态树兼容混合 key。
+启动时先恢复存档，再安装卸载保存与定时保存。恢复错误仍向外报告，页面保留原占位内容，
+但不会注册可能覆盖原文的这两项自动保存；不清空旧存档或以默认数据吞掉错误。
 从 Reel 的动态边界实际检查 Store、Enum 操作及 id/time，再调用业务 updater；
 不用假的名义类型或 Fn 强转。挂载元素使用 Respo 的 typed DOM selector。
 
@@ -83,7 +85,7 @@ HTML 引用和公开上传内容；PR 不执行生产 rsync。
 
 页面仍为原有 TODO 占位内容，本次迁移不实现规划中的类型 UI。
 
-0.30.1-alpha.4 不是正式 0.30.1，开放 Store/状态值仍有显式 Dynamic 边界。
+开放 Store/状态值仍有显式 Dynamic 边界，不宣称类型债务清零。
 
 ### License
 
