@@ -14,13 +14,13 @@
           :code $ quote $ defcomp comp-container (reel)
             let
                 store $ decode-map-as
-                  option:unwrap $ get reel :store
+                  .unwrap $ get reel :store
                   :: 'Map 'Tag 'Dynamic
                 states $ decode-map-as
-                  option:unwrap $ get store :states
+                  .unwrap $ get store :states
                   :: 'Map 'Dynamic 'Dynamic
               div
-                {} $ :style $ merge ui/global ui/row
+                {} $ :style $ .merge ui/global ui/row
                 <> |TODO
                 when dev? $ comp-reel (>> states :reel) reel $ {}
           :examples $ []
@@ -37,7 +37,7 @@
       :defs $ {}
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev?
-            = |dev $ option:unwrap-or (get-env |mode) |release
+            = |dev $ .unwrap-or (get-env |mode) |release
           :examples $ []
           :schema $ :: 'Bool
         'site $ %{} 'CodeEntry (:doc |)
@@ -73,14 +73,20 @@
             println "|Running mode:" $ if config/dev? |dev |release
             if config/dev? $ load-console-formatter!
             render-app!
-            add-watch! *reel :changes $ fn (_reel _prev) (render-app!)
+            add-watch! *reel :changes $ fn (_reel _prev)
+              hint-fn $ {} (:return 'Unit)
+                :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'Map 'Tag 'Dynamic)
+              render-app!
             listen-devtools! |k dispatch-wire!
             match
-              storage-get $ option:unwrap-or (get config/site :storage-key) |workflow
+              storage-get $ .unwrap-or (get config/site :storage-key) |workflow
               (:some raw)
                 dispatch! $ :: :hydrate-storage $ parse-cirru-edn raw
               (:none) &unit
-            add-event-listener! |beforeunload $ fn (_event) (persist-storage!)
+            add-event-listener! |beforeunload $ fn (_event)
+              hint-fn $ {} (:return 'Unit)
+                :args $ [] 'js-ffi.browser/EventHost
+              persist-storage!
             set-interval! persist-storage! 60000
             println "|App started."
             , &unit
@@ -90,7 +96,7 @@
             :features $ #{} :js-ffi
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn mount-target ()
-            option:unwrap $ query-selector |.app
+            .unwrap $ query-selector |.app
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.dom/DomElement)
             :args $ []
@@ -98,8 +104,8 @@
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! () (js/console.log |persist)
             storage-set!
-              option:unwrap-or (get config/site :storage-key) |workflow
-              format-cirru-edn $ option:unwrap $ get @*reel :store
+              .unwrap-or (get config/site :storage-key) |workflow
+              format-cirru-edn $ .unwrap $ get @*reel :store
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -109,7 +115,10 @@
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
               do (remove-watch! *reel :changes) (clear-cache!)
-                add-watch! *reel :changes $ fn (reel prev) (render-app!)
+                add-watch! *reel :changes $ fn (reel prev)
+                  hint-fn $ {} (:return 'Unit)
+                    :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'Map 'Tag 'Dynamic)
+                  render-app!
                 reset! *reel $ decode-map-as (refresh-reel @*reel schema/store update-wire-store) (:: 'Map 'Tag 'Dynamic)
                 hud! |ok~ |Ok
               hud! |error build-errors

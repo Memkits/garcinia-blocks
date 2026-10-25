@@ -52,9 +52,13 @@ product:
 
 https://github.com/calcit-lang/respo-calcit-workflow
 
-使用配对正式 Calcit/procs **0.30.1**、Caps 0.1.1、
-Node.js 24、Yarn 4.18.0；模块使用精确正式 Respo 0.16.124、UI 0.8.0、
-Reel 0.6.41 和 js-ffi 0.2.5，升级后重新安装模块。
+使用者影响：继续配对正式 Calcit/procs **0.30.1**、Caps 0.1.1、
+Node.js 24、Yarn 4.18.0；模块使用精确正式 Respo 0.16.126、UI 0.8.1、
+Reel 0.6.42 和 js-ffi 0.2.6，传递 Router 0.8.38、Vite 固定 8.3.3。重新安装完整依赖图、生成 JS 并刷新，不混装旧 alpha 缓存。
+
+8 处旧 Map/Option 调用改为方法，保留原默认值与求值顺序。两个 watcher 的新/旧值按真实 Ref<Map<Tag,Dynamic>> 合同标注，离页事件按真实 EventHost 标注；不把开放 Store/混合 key 伪装成封闭 Struct。
+真实 `hud!` 及成功/错误提示保留，不用 raise 替换。删除正式 procs 的 npm 预批准例外，按普通安装策略验证。
+本次仍不实现 TODO 类型 UI，不新增函数、强转、预算、测试框架或永久验证脚本；不授权合并或生产部署。
 
 ```sh
 caps --ci --strict
