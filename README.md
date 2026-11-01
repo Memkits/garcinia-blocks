@@ -48,48 +48,37 @@ product:
       :b ?value
 ```
 
-### Workflow
+### 使用者需要注意
 
-https://github.com/calcit-lang/respo-calcit-workflow
+配对正式 **Calcit / procs 0.32.1**、Caps 0.1.1、Node24 和 Yarn4.18.0，模块为正式 Respo0.17.1、UI0.9.0、Reel0.7.0、JS FFI0.2.9；UI 的 Router0.9.0-alpha.4 传递依赖保留，不引用 main/hash。升级后重新安装完整依赖图、生成JS、重启并刷新，不混用旧 runtime。
 
-使用者影响：继续配对正式 Calcit/procs **0.30.1**、Caps 0.1.1、
-Node.js 24、Yarn 4.18.0；模块使用精确正式 Respo 0.16.126、UI 0.8.1、
-Reel 0.6.42 和 js-ffi 0.2.6，传递 Router 0.8.38、Vite 固定 8.3.3。重新安装完整依赖图、生成 JS 并刷新，不混装旧 alpha 缓存。
+页面仍为原 TODO 占位内容，不实现上面的规划类型UI。原 Map Store、未知字段、混合key状态树、`workflow`存储键及每分钟保存周期保持。恢复前已显示的占位内容保留，解析/解码失败会阻止注册退出及定时保存，错误向外报告，不清空或默认覆盖旧存档。真实JS `hud!`提示保留，不以raise替代。
 
-8 处旧 Map/Option 调用改为方法，保留原默认值与求值顺序。两个 watcher 的新/旧值按真实 Ref<Map<Tag,Dynamic>> 合同标注，离页事件按真实 EventHost 标注；不把开放 Store/混合 key 伪装成封闭 Struct。
-真实 `hud!` 及成功/错误提示保留，不用 raise 替换。删除正式 procs 的 npm 预批准例外，按普通安装策略验证。
-本次仍不实现 TODO 类型 UI，不新增函数、强转、预算、测试框架或永久验证脚本；不授权合并或生产部署。
+### 本次迁移与限制
+
+官方formatter转换三处旧类型写法。原14个完整官方视图仅render-app!一个派发参数变化，全部既有schema/tests/meta不变；新增开放Enum的DispatchOp代表定义绑定原来缺失的入口类型槽，代表值不发送。render!使用已有Enum→Unit的dispatch!，DevTools继续用原Dynamic检查入口dispatch-wire!；业务updater仍检查Store、Enum和id/time，不以伪造Struct或强转掩盖开放状态。
+
+runtime/deps/lock配对，npm包龄60分钟无例外。原工作流、类型门禁、测试文件和断言、权限、正式Action tags和前端路径保持，不增加checker/concurrently、预算或编译器fix/proof规则。开放Store/wire仍有真实Dynamic，不宣称债务清零。
 
 ```sh
 caps --ci --strict
 yarn install --immutable
 caps verify --toolchain
 calcit calcit.cirru --check-only --all-defs
-calcit calcit.cirru fix --workflow strict --verify --format json | jq -e '.data.workflow.status == "passed" and .diagnostics == []'
+calcit calcit.cirru fix --workflow strict --verify
 yarn build
 node --test tests/*.test.mjs
 ```
 
-只维护 `calcit.cirru` / `deps.cirru`。Store 仍为原 Map 格式，保留未知字段、
-`workflow` 存储键与每分钟持久化周期；状态树兼容混合 key。
-启动时先恢复存档，再安装卸载保存与定时保存。恢复错误仍向外报告，页面保留原占位内容，
-但不会注册可能覆盖原文的这两项自动保存；不清空旧存档或以默认数据吞掉错误。
-从 Reel 的动态边界实际检查 Store、Enum 操作及 id/time，再调用业务 updater；
-不用假的名义类型或 Fn 强转。挂载元素使用 Respo 的 typed DOM selector。
+当前候选通过202个全定义、原五namespace的15个公开定义、完整strict diagnostics=[]、原6项JS回归及构建/canonical。没有附带native测试，不把空集合计为通过。实际新回环来源验证原TODO页启动和刷新，浏览器warn/error=[]；这不代表规划类型UI、DevTools交互、坏存档或HUD注错都已验收。本轮不读真实存档，不将历史结果计为本轮重验。
 
-`yarn dev` 先编译一次再启动 Vite；实时编辑时另开终端运行
-`calcit calcit.cirru -w`。不增加进程管理器或独立校验脚本。
+只维护calcit.cirru/deps.cirru，Snapshot使用官方CLI，不恢复compact.cirru/package.cirru，不提交js-out/dist。yarn dev先编译再启动Vite，实时编辑另开终端运行calcit calcit.cirru -w。
 
-部署只针对前端资源。`VITE_BASE_URL` 本地默认相对路径，PR 使用独立的
-`pr/<number>/<run-id>/<attempt>/` 前缀；生产 COS 前缀、原服务器目录及外部
-字体、logo、analytics 保持不变。精确正式 tag 的 COS action v1.2.0 自身验证
-HTML 引用和公开上传内容；PR 不执行生产 rsync。
+### 前端部署
 
-### 限制
+VITE_BASE_URL本地默认相对路径，PR沿用独立编号/run/attempt前缀。COS仅dist/，正式cos-upload-action v1.2.0内置HTML引用和公开上传校验，不复制verify脚本。原服务器目录、字体/logo/analytics和main-only rsync条件保持，不迁移后端。不合并、不生产部署、不发布Git/npm。
 
-页面仍为原有 TODO 占位内容，本次迁移不实现规划中的类型 UI。
-
-开放 Store/状态值仍有显式 Dynamic 边界，不宣称类型债务清零。
+模板：https://github.com/calcit-lang/respo-calcit-workflow 。
 
 ### License
 
