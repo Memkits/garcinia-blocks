@@ -15,14 +15,16 @@
             let
                 store $ decode-map-as
                   .unwrap $ get reel :store
-                  :: 'Map 'Tag 'Dynamic
+                  Map Tag Dynamic
                 states $ decode-map-as
                   .unwrap $ get store :states
-                  :: 'Map 'Dynamic 'Dynamic
+                  Map Dynamic Dynamic
               div
                 {} $ :style $ .merge ui/global ui/row
                 <> |TODO
-                when dev? $ comp-reel (>> states :reel) reel $ {}
+                if dev?
+                  Option :some $ comp-reel (>> states :reel) reel $ {}
+                  Option :none
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) (-> respo.schema/Component) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
@@ -58,7 +60,7 @@
             reset! *reel $ reel-updater update-wire-store @*reel op
             , &unit
           :examples $ []
-          :schema $ quote $ Fn Enum (-> Unit)
+          :schema $ quote $ Fn AnyEnum (-> Unit)
         'dispatch-wire! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch-wire! (op)
             if (enum? op) (dispatch! op) (raise |Expected-Enum-operation)
@@ -106,7 +108,7 @@
                 add-watch! *reel :changes $ fn (reel prev)
                   hint-fn $ Fn (Map Tag Dynamic) (Map Tag Dynamic) (-> Unit)
                   render-app!
-                reset! *reel $ decode-map-as (refresh-reel @*reel schema/store update-wire-store) (:: 'Map 'Tag 'Dynamic)
+                reset! *reel $ decode-map-as (refresh-reel @*reel schema/store update-wire-store) (Map Tag Dynamic)
                 hud! |ok~ |Ok
               hud! |error build-errors
             , &unit
@@ -139,7 +141,7 @@
           :code $ quote $ def DispatchOp
             :: :states ([]) nil
           :examples $ []
-          :schema $ quote Enum
+          :schema $ quote AnyEnum
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             {} $ :states $ {}
@@ -154,7 +156,7 @@
           :code $ quote $ defn update-wire-store (store op op-id op-time)
             if (enum? op)
               updater
-                decode-map-as store $ :: 'Map 'Tag 'Dynamic
+                decode-map-as store $ Map Tag Dynamic
                 , op (decode-map-as op-id 'String) (decode-map-as op-time 'Number)
               raise |Expected-Enum-operation
           :examples $ []
@@ -166,14 +168,14 @@
               (:states cursor data)
                 decode-map-as
                   update-states store
-                    decode-map-as cursor $ :: 'List 'Dynamic
+                    decode-map-as cursor $ List respo.schema/CoordKey
                     , data
-                  :: 'Map 'Tag 'Dynamic
+                  Map Tag Dynamic
               (:hydrate-storage data)
-                decode-map-as data $ :: 'Map 'Tag 'Dynamic
+                decode-map-as data $ Map Tag Dynamic
               _ $ do (println "|unknown op:" op) store
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) Enum String Number
+          :schema $ quote $ Fn (Map Tag Dynamic) AnyEnum String Number
             -> $ Map Tag Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
