@@ -4,7 +4,7 @@
 
 Demo https://r.tiye.me/Memkits/garcinia-blocks/ .
 
-本地开发使用正式 Calcit CLI 和 `@calcit/procs` 0.40.0。升级后请重新安装依赖并构建。Reel 状态、旧存档和预览流程沿用现有用法。
+本地开发使用正式 Calcit CLI 和 `@calcit/procs` 0.41.0。升级后请重新安装依赖并构建。Reel 状态、旧存档和预览流程沿用现有用法。
 
 _TODO_
 
