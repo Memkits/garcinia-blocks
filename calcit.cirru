@@ -16,7 +16,7 @@
                 store $ :store reel
                 states $ decode-map-as
                   .unwrap $ get store :states
-                  Map Dynamic Dynamic
+                  Map respo.schema/CoordKey Dynamic
               div
                 {} $ :style $ .merge ui/global ui/row
                 <> |TODO
