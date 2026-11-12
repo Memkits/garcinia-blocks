@@ -14,9 +14,7 @@
           :code $ quote $ defcomp comp-container (reel on-control!)
             let
                 store $ :store reel
-                states $ decode-map-as
-                  .unwrap $ get store :states
-                  Map respo.schema/CoordKey Dynamic
+                states store.:states
               div
                 {} $ :style $ .merge ui/global ui/row
                 <> |TODO
@@ -24,8 +22,7 @@
                   Some $ comp-typed-reel (>> states :reel) reel ({}) on-control!
                   , None
           :examples $ []
-          :schema $ quote $ Fn
-            reel.typed/State app.schema/Op $ Map Tag Dynamic
+          :schema $ quote $ Fn (reel.typed/State app.schema/Op app.schema/Store)
             Fn reel.typed/Control $ -> Unit
             -> respo.schema/Component
             :features :js-ffi
@@ -54,14 +51,13 @@
         '*reel $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *reel (typed/new-reel schema/store)
           :examples $ []
-          :schema $ quote $ Ref
-            typed/State schema/Op $ Map Tag Dynamic
+          :schema $ quote $ Ref (typed/State schema/Op schema/Store)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when config/dev? $ println |Dispatch: op
             dispatch-resolved! op
           :examples $ []
-          :schema $ quote $ Fn schema/Op (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn schema/Op (-> Unit) (:features :io :js-ffi :state)
         'dispatch-resolved! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch-resolved! (op)
             reset! *reel $ match op
@@ -70,23 +66,20 @@
                 typed/record-op updater @*reel action (generate-id!) (js-ffi.shared/now-ms)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn schema/ResolvedOp (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn schema/ResolvedOp (-> Unit) (:features :js-ffi :state)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
             if config/dev? $ load-console-formatter!
             render-app!
             add-watch! *reel :changes $ fn (_reel _prev)
-              hint-fn $ Fn
-                typed/State schema/Op $ Map Tag Dynamic
-                typed/State schema/Op $ Map Tag Dynamic
-                -> Unit
+              hint-fn $ Fn (typed/State schema/Op schema/Store) (typed/State schema/Op schema/Store) (-> Unit)
               render-app!
             listen-devtools! |k on-control!
             match
               storage-get $ .unwrap-or (get config/site :storage-key) |workflow
               (:some raw)
-                dispatch-resolved! $ app.schema/Op :hydrate-storage $ decode-map-as (parse-cirru-edn raw) (Map Tag Dynamic)
+                dispatch-resolved! $ app.schema/Op :hydrate-storage $ schema/decode-store (parse-cirru-edn raw)
               (:none) &unit
             add-event-listener! |beforeunload $ fn (_event)
               hint-fn $ Fn js-ffi.browser/EventHost $ -> Unit
@@ -95,7 +88,7 @@
             println "|App started."
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn mount-target ()
             .unwrap $ query-selector |.app
@@ -104,31 +97,28 @@
         'on-control! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-control! (control) (dispatch-resolved! control)
           :examples $ []
-          :schema $ quote $ Fn typed/Control (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn typed/Control (-> Unit) (:features :js-ffi :state)
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! () (js/console.log |persist)
             storage-set!
               .unwrap-or (get config/site :storage-key) |workflow
-              format-cirru-edn $ :store @*reel
+              format-cirru-edn $ schema/encode-store $ :store @*reel
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi :state)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
               do (remove-watch! *reel :changes) (clear-cache!)
                 add-watch! *reel :changes $ fn (reel prev)
-                  hint-fn $ Fn
-                    typed/State schema/Op $ Map Tag Dynamic
-                    typed/State schema/Op $ Map Tag Dynamic
-                    -> Unit
+                  hint-fn $ Fn (typed/State schema/Op schema/Store) (typed/State schema/Op schema/Store) (-> Unit)
                   render-app!
                 reset! *reel $ typed/refresh updater @*reel schema/store
                 hud! |ok~ |Ok
               hud! |error build-errors
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render-with! (mount-target)
@@ -136,7 +126,7 @@
               , dispatch!
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require
@@ -156,19 +146,39 @@
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
             :states (List respo.schema/CoordKey) String
-            :hydrate-storage $ Map Tag Dynamic
+            :hydrate-storage app.schema/Store
           :examples $ []
           :schema $ quote EnumDef
         'ResolvedOp $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defunion ResolvedOp Op reel.typed/Control
           :examples $ []
           :schema $ quote UnionDef
+        'Store $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct Store
+            :states $ Map respo.schema/CoordKey Dynamic
+            :extensions $ Map Tag Dynamic
+          :examples $ []
+          :schema $ quote StructDef
+        'decode-store $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn decode-store (raw)
+            let
+                fields $ decode-map-as raw $ Map Tag Dynamic
+                states $ decode-map-as
+                  .unwrap $ &map:get fields :states
+                  Map respo.schema/CoordKey Dynamic
+              Store :states states :extensions $ dissoc fields :states
+          :examples $ []
+          :schema $ quote $ Fn Input (-> Store) (:generics Input)
+        'encode-store $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn encode-store (store) (assoc store.:extensions :states store.:states)
+          :examples $ []
+          :schema $ quote $ Fn Store
+            -> $ Map Tag Dynamic
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
-            {} $ :states $ {}
-              :cursor $ []
+            Store :extensions ({}) :states $ {} $ :cursor ([])
           :examples $ []
-          :schema $ quote $ Map Tag Dynamic
+          :schema $ quote Store
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.schema
     'app.updater $ %{} 'FileEntry
@@ -177,11 +187,10 @@
           :code $ quote $ defn updater (store op op-id op-time)
             match op
               (:states cursor data)
-                decode-map-as (update-states store cursor data) (Map Tag Dynamic)
+                assoc store :states $ decode-map-as (update-state-tree store.:states cursor data) (Map respo.schema/CoordKey Dynamic)
               (:hydrate-storage data) data
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.schema/Op String Number
-            -> $ Map Tag Dynamic
+          :schema $ quote $ Fn app.schema/Store app.schema/Op String Number (-> app.schema/Store)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
-          :require $ respo.cursor :refer $ update-states
+          :require $ respo.cursor :refer $ update-state-tree

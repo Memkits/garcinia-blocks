@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import * as c from "../js-out/calcit.core.mjs";
-import { Op, store } from "../js-out/app.schema.mjs";
+import { Op, store, decode_store, encode_store } from "../js-out/app.schema.mjs";
 import { updater } from "../js-out/app.updater.mjs";
 import { comp_container } from "../js-out/app.comp.container.mjs";
 import { make_string } from "../js-out/respo.render.html.mjs";
@@ -17,17 +17,17 @@ test("existing placeholder renders with initial and restored states", () => {
   assert.match(make_string(comp_container(new_reel(restored), onControl)), /TODO/);
 });
 test("nested state operation preserves the full store and cursor", () => {
-  const original = c.assoc(store, t.untouched, "keep this field");
+  const original = decode_store(c.assoc(encode_store(store), t.untouched, "keep this field"));
   const next = updater(original, op(t.states, c._$L_(t.editor), "draft text"), "fixture", 0);
-  assert.equal(get(next, t.untouched), "keep this field");
+  assert.equal(get(encode_store(next), t.untouched), "keep this field");
   assert.equal(get(get(get(next, t.states), t.editor), t.data), "draft text");
   assert.ok(c._$e_(get(get(next, t.states), t.cursor), c._$L_()));
 });
 test("legacy storage maps round-trip and hydrate without losing states", () => {
   const original = map(t.states, map(t.cursor, c._$L_(), t.editor, map(t.data, "saved")), t.untouched, "retained");
   const parsed = c.parse_cirru_edn(c.format_cirru_edn(original));
-  const next = updater(store, op(t["hydrate-storage"], parsed), "fixture", 0);
-  assert.ok(c._$e_(next, original));
+  const next = updater(store, op(t["hydrate-storage"], decode_store(parsed)), "fixture", 0);
+  assert.ok(c._$e_(encode_store(next), original));
   assert.match(make_string(comp_container(new_reel(next), onControl)), /TODO/);
 });
 test("typed Reel records a named state update", () => {
