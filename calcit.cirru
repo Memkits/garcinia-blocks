@@ -16,7 +16,7 @@
                 store $ :store reel
                 states $ decode-map-as
                   .unwrap $ get store :states
-                  Map Dynamic Dynamic
+                  Map respo.schema/CoordKey Dynamic
               div
                 {} $ :style $ .merge ui/global ui/row
                 <> |TODO
@@ -78,8 +78,8 @@
             render-app!
             add-watch! *reel :changes $ fn (_reel _prev)
               hint-fn $ Fn
-                reel.typed/State app.schema/Op $ Map Tag Dynamic
-                reel.typed/State app.schema/Op $ Map Tag Dynamic
+                typed/State schema/Op $ Map Tag Dynamic
+                typed/State schema/Op $ Map Tag Dynamic
                 -> Unit
               render-app!
             listen-devtools! |k on-control!
@@ -119,8 +119,8 @@
               do (remove-watch! *reel :changes) (clear-cache!)
                 add-watch! *reel :changes $ fn (reel prev)
                   hint-fn $ Fn
-                    reel.typed/State app.schema/Op $ Map Tag Dynamic
-                    reel.typed/State app.schema/Op $ Map Tag Dynamic
+                    typed/State schema/Op $ Map Tag Dynamic
+                    typed/State schema/Op $ Map Tag Dynamic
                     -> Unit
                   render-app!
                 reset! *reel $ typed/refresh updater @*reel schema/store
