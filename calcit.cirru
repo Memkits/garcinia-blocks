@@ -187,10 +187,25 @@
           :code $ quote $ defn updater (store op op-id op-time)
             match op
               (:states cursor data)
-                assoc store :states $ decode-map-as (update-state-tree store.:states cursor data) (Map respo.schema/CoordKey Dynamic)
+                assoc store :states $ update-state-map store.:states cursor data
               (:hydrate-storage data) data
           :examples $ []
           :schema $ quote $ Fn app.schema/Store app.schema/Op String Number (-> app.schema/Store)
+          :tests $ [] $ %{} 'TestEntry (:name |typed-state-path)
+            :code $ quote $ let
+                original $ assoc app.schema/store :extensions $ {} (:legacy |keep)
+                root $ updater original
+                  app.schema/Op :states ([]) |root
+                  , |id 0
+                nested $ updater original
+                  app.schema/Op :states ([] :panel |item 2) |nested
+                  , |id 0
+              assert= (Result :ok |root)
+                get-in (:states root) ([] :data)
+              assert= (Result :ok |nested)
+                get-in (:states nested) ([] :panel |item 2 :data)
+              assert= (:extensions original) (:extensions nested)
+            :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
-          :require $ respo.cursor :refer $ update-state-tree
+          :require $ respo.cursor :refer $ update-state-map
