@@ -4,7 +4,7 @@
 
 Demo https://r.tiye.me/Memkits/garcinia-blocks/ .
 
-本地开发使用正式 Calcit CLI 和 `@calcit/procs` 0.46.0。升级后请重新安装依赖并构建。Reel 状态、旧存档和预览流程沿用现有用法。
+本地开发使用正式 Calcit CLI 和 `@calcit/procs` 0.47.1。升级后请重新安装依赖并构建。Reel 状态、旧存档和预览流程沿用现有用法。
 
 _TODO_
 
@@ -52,7 +52,7 @@ product:
 
 ### 使用者需要注意
 
-本地使用正式 Calcit / procs **0.46.0**、Caps 0.1.1、Node 24 和 Yarn 4.18.0。升级后重新安装依赖和构建。已发布模块为 Respo 0.20.0、UI 0.16.6、Reel 0.11.10 和 JS FFI 0.2.26，传递依赖 Router 为 0.12.18。
+本地使用正式 Calcit / procs **0.47.1**、Caps 0.1.1、Node 24 和 Yarn 4.18.0。升级后重新安装依赖和构建。已发布模块为 Respo 0.20.1、UI 0.16.7、Reel 0.11.11 和 JS FFI 0.2.26，传递依赖 Router 为 0.12.19。
 
 页面仍显示原 TODO 占位。存储继续使用 `workflow`、原 EDN Map 和每分钟保存周期，旧存档中的状态树与额外字段可继续读写。恢复失败时退出保存和定时保存尚未注册。热更新仍使用浏览器里的 `hud!`。
 
